@@ -1,0 +1,11 @@
+# .gitignore
+node_modules/
+.env
+.DS_Store
+*.log
+supabase/.temp/
+supabase/.output/
+supabase/functions/.env
+supabase/.env.local
+.history
+.env.local
