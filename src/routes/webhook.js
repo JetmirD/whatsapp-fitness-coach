@@ -48,10 +48,23 @@ router.post('/', async (req, res) => {
 
   } else if (step === 'awaiting_name') {
     const name = extractName(message);
-    await updateUserField(user.id, 'name', name);
-    await updateOnboardingStep(user.id, 'goal');
-    replyText = `Nice to meet you, ${name}! 🎉 What’s your fitness goal? (e.g., lose weight, gain muscle)`;
+//Trying to detect wrong names
+    const isValidName = (input) => {
+      const lower = input.toLowerCase().trim();
+      const questionWords = ['what', 'why', 'how', 'when', 'where', 'are', 'who'];
+      if (lower.endsWith('?')) return false;
+      if (lower.split(' ').length > 3) return false;
+      if (lower.length < 2) return false;
+      return !questionWords.some((w) => lower.includes(w));
+    };
 
+    if (!isValidName(name)) {
+      replyText = `Hmm, that doesn't sound like a name. Could you please just tell me your first name? 😊`;
+    } else {
+      await updateUserField(user.id, 'name', name);
+      await updateOnboardingStep(user.id, 'goal');
+      replyText = `Nice to meet you, ${name}! 🎉 What’s your fitness goal? (e.g., lose weight, gain muscle)`;
+    }
   } else if (step === 'goal') {
     await updateUserField(user.id, 'goal', message);
     await updateOnboardingStep(user.id, 'intensity');
@@ -73,16 +86,20 @@ router.post('/', async (req, res) => {
     }
 
   } else if (step === 'location') {
-    const loc = message.toLowerCase();
-    if (loc.includes('home') || loc.includes('gym')) {
-      const location = loc.includes('home') ? 'home' : 'gym';
-      await updateUserField(user.id, 'location', location);
+    const loc = message.trim().toLowerCase();
+    const normalized = loc.replace(/[^\w\s]/gi, '');
+    //Just checking to not allow other keywords than gym or home
+    if (/\b(home|house|apartment)\b/.test(normalized)) {
+      await updateUserField(user.id, 'location', 'home');
+      await updateOnboardingStep(user.id, 'done');
+      replyText = `Awesome! ✅ You're all set, ${user.name}. Let's crush it together! Type anything to get started.`;
+    } else if (/\b(gym|fitness|club|workout center)\b/.test(normalized)) {
+      await updateUserField(user.id, 'location', 'gym');
       await updateOnboardingStep(user.id, 'done');
       replyText = `Awesome! ✅ You're all set, ${user.name}. Let's crush it together! Type anything to get started.`;
     } else {
-      replyText = `Where do you usually work out — at home or at the gym?`;
+      replyText = `Just to confirm — do you usually work out *at home* or *at the gym*? 🏠🏋️‍♂️`;
     }
-
   } else {
     // === MAIN FUNCTIONALITY ===
 
@@ -124,10 +141,10 @@ router.post('/', async (req, res) => {
         Only give the user the numbers in the form of a short report — do not set goals or suggest targets.
         Keep it warm and motivating, but brief.
         `.trim();
-        
-        
-        
-        
+
+
+
+
         replyText = await sendToLLM(summaryPrompt);
       }
 
