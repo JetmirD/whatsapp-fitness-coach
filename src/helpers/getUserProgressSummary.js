@@ -10,7 +10,7 @@ function formatDate(iso) {
       `🔥 Streak: ${user.streak || 0} day(s)\n` +
       `✅ Last workout: ${formatDate(user.last_completed_date)}\n` +
       `🏋️ Location: ${user.location || 'Not set'}\n` +
-      `⏰ Reminder: ${user.preferred_hour !== null ? `${user.preferred_hour}:00` : 'Not set'}\n\n` +
+      `⏰ Reminder: ${user.preferred_hour !== null ? `${user.preferred_hour}:50` : 'Not set'}\n\n` +
       `Stay consistent and keep crushing it! 💪`;
   }
   

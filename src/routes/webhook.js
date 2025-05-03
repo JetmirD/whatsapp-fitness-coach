@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
 
   // === ONBOARDING FLOW ===
   if (step === 'name' && !user.name) {
-    replyText = `Hi there! 👋 I'm your fitness coach. What’s your name?`;
+    replyText = `Hiii there! 👋 I'm your fitness coach. What’s your name?`;
     await updateOnboardingStep(user.id, 'awaiting_name');
 
   } else if (step === 'awaiting_name') {
