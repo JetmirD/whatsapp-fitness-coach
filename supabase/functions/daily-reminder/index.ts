@@ -27,7 +27,7 @@ serve(async () => {
 const currentHour = now.getUTCHours(); /
 console.log(`Current hour: ${currentHour}`);
 if (user.preferred_hour !== null && user.preferred_hour !== currentHour) {
-  console.log(`⏭️ Skipping ${user.phone_number} – prefers ${user.preferred_hour}:00`);
+  console.log(`⏭️ Skipping ${user.phone_number} – prefers ${user.preferred_hour}:49`);
   continue;
 }
 
