@@ -4,7 +4,7 @@ const { isProgressRequest } = require('./intentService');
 const getUserProgressSummary = require('../helpers/getUserProgressSummary');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODEL = 'mistralai/mistral-7b-instruct';
+const OPENROUTER_MODEL = 'deepseek-ai/deepseek-coder-6.7b-instruct';
 
 async function generateSmartReply(user, message) {
   if (await isProgressRequest(message)) {
