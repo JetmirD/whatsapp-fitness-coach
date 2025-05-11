@@ -6,6 +6,22 @@ const getUserProgressSummary = require('../helpers/getUserProgressSummary');
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_MODEL = 'deepseek/deepseek-chat';
 
+async function getRecentChatHistory(userId, limit = 5) {
+  const { data: messages } = await supabase
+    .from('messages')
+    .select('content, message_type')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (!messages) return [];
+  
+  return messages.reverse().map(m => ({
+    role: m.message_type === 'inbound' ? 'user' : 'assistant',
+    content: m.content
+  }));
+}
+
 async function generateSmartReply(user, message) {
   if (await isProgressRequest(message)) {
     return getUserProgressSummary(user);
@@ -17,23 +33,27 @@ async function generateSmartReply(user, message) {
     .eq('user_id', user.id)
     .single();
 
+  // Get recent chat history for LLM context
+  const chatHistory = await getRecentChatHistory(user.id);
+console.log("ChatHistory",chatHistory);
 const systemPrompt = `
 You are an engaging, motivational fitness coach on WhatsApp helping users reach their fitness goals.
 
-User context:
+Use ONLY this user data:
 - Name: ${user.name}
 - Goal: ${user.goal}
 - Fitness level: ${prefs?.intensity_level || 'beginner'}
 - Location: ${user.location || 'not set'}
 
-Instructions:
-- Keep replies friendly, casual, and short (max 2–3 sentences).
+Rules:
+- Keep replies friendly, casual, and short (max 1-2 sentences).
+- Only use the user data above
 - NEVER send full weekly plans unless the user explicitly asks for it.
 - If the user says something casual like "thanks", "okay", or "got it", just reply politely or with motivation — do NOT repeat plans or info they already received.
 - Only respond to fitness, nutrition, or motivation topics. If the message is unrelated, kindly say you can only chat about those.
 - Avoid robotic or overly formal tones. You're texting like a real coach — natural and supportive.
 
-Now respond to: "${message}"
+Message to respond to: "${message}"
 `.trim();
   try {
     const response = await axios.post(
@@ -42,6 +62,7 @@ Now respond to: "${message}"
         model: OPENROUTER_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
+          ...chatHistory,
           { role: 'user', content: message }
         ]
       },
@@ -90,19 +111,20 @@ async function summarizeMealsWithLLM(meals) {
   const mealDescriptions = meals.map(m => `- ${m.meal_type} (${m.calories_estimate} kcal)`).join('\n');
 
   const prompt = `
-You're a friendly fitness coach. The user asked what they ate this week.
+You're a friendly whatsapp fitness coach. The user asked what they ate this week.
 
-Here are their logged meals:
+User's meals this week:
 ${mealDescriptions}
 
-Generate a short (2–3 sentences) summary. Be natural, encouraging, and human. Mention variety, any healthy patterns, or if it’s time to rebalance. Include a few emojis but no overkill. No date mentions.
+Rules:
+1. Write 1-2 sentences only
+2. Use ONLY the meal data above
+3. Add 1-2 relevant emojis
+4. No dates or extra info
 
-Examples:
-- "Nice variety this week! Great job keeping it mostly clean 💪 Let's keep it up!"
-- "Looks like you had a few treat meals 🍕🍔 but also balanced it with good choices 🥗"
+Example: "Great variety in your meals! 🥗 The balance of proteins and veggies looks perfect 💪"
 
-Now write the summary.
-`;
+Write the summary:`;
 
   return await sendToLLM(prompt);
 }
