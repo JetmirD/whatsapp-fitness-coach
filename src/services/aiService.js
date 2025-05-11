@@ -4,7 +4,7 @@ const { isProgressRequest } = require('./intentService');
 const getUserProgressSummary = require('../helpers/getUserProgressSummary');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODEL = 'deepseek-ai/deepseek-coder-6.7b-instruct';
+const OPENROUTER_MODEL = 'deepseek-ai/deepseek-chat-6.7b';
 
 async function generateSmartReply(user, message) {
   if (await isProgressRequest(message)) {
@@ -47,8 +47,10 @@ Now respond to: "${message}"
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://coachbot.app',
+          'X-Title': 'CoachBot'
         }
       }
     );
@@ -73,9 +75,11 @@ async function sendToLLM(prompt) {
     },
     {
       headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-      },
+        'HTTP-Referer': 'https://coachbot.app',
+        'X-Title': 'CoachBot'
+      }
     }
   );
 
