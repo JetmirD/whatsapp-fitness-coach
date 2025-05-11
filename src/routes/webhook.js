@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getOrCreateUser, updateUserField, updateOnboardingStep } = require('../services/userService');
 const { logMessage } = require('../services/messageService');
-const { handleOnboardingStep } = require('../handlers/onboardingHandler');
+const { handleOnboarding } = require('../handlers/onboardingHandler');
 const { handleImage } = require('../handlers/imageHandler');
 const { handleMeal } = require('../handlers/mealHandler');
 const { handleWorkout } = require('../handlers/workoutHandler');
@@ -27,7 +27,7 @@ return res.status(200).send('<Response></Response>');
   try {
     // === 1. Onboarding ===
     if (step !== 'done') {
-      replyText = await handleOnboardingStep(user, message);
+      replyText = await handleOnboarding(user, message);
     }
 
     // === 2. Image handling ===
